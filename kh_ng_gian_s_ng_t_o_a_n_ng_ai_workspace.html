@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Workspace - Không Gian Sáng Tạo Đa Năng</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons via CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #090d16;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
+        }
+
+        .code-font {
+            font-family: 'Fira Code', monospace;
+        }
+
+        /* Tùy biến thanh cuộn hiện đại */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b0f19;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #312e81;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4f46e5;
+        }
+    </style>
+</head>
+<body class="text-slate-200 min-h-screen flex flex-col overflow-x-hidden selection:bg-indigo-900 selection:text-indigo-100">
+
+    <!-- Header chính thức -->
+    <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md sticky top-0 z-40 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="p-2 bg-indigo-950/80 rounded-xl border border-indigo-500/30 text-indigo-400">
+                <i data-lucide="layers" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-tight text-slate-100 flex items-center gap-2">
+                    AI Workspace <span class="text-xs px-2.5 py-0.5 rounded-full bg-indigo-950 text-indigo-300 border border-indigo-800/50 font-medium">Bản v2.0</span>
+                </h1>
+                <p class="text-[11px] text-slate-400 uppercase tracking-wider">Không gian làm việc tích hợp: Chat, Image, Music & Canvas</p>
+            </div>
+        </div>
+
+        <!-- Cấu hình AI API Key -->
+        <div class="flex items-center gap-3">
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
+                    <i data-lucide="key" class="w-4 h-4"></i>
+                </span>
+                <input type="password" id="apiKeyInput" placeholder="Nhập AI API Key (Gemini API)..." 
+                    class="pl-9 pr-24 py-2 w-72 bg-slate-900 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-xs text-indigo-200 placeholder-slate-500 outline-none transition-all duration-300">
+                <button onclick="saveApiKey()" class="absolute right-1 top-1 bottom-1 px-3 bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-semibold rounded-lg transition-colors duration-200 uppercase tracking-wider">
+                    Lưu Lại
+                </button>
+            </div>
+            <span id="apiStatusBadge" class="h-2.5 w-2.5 rounded-full bg-red-500 shadow-md shadow-red-500/50 transition-all duration-500" title="Chưa nhập API Key"></span>
+        </div>
+    </header>
+
+    <!-- Khu vực điều khiển và nội dung chính -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Sidebar Navigation -->
+        <div class="lg:col-span-3 flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0">
+            <button onclick="switchTab('chat')" id="tabBtn-chat" class="tab-btn flex-1 lg:flex-initial flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-300 bg-indigo-950/40 text-indigo-400 border border-indigo-800/40 shadow-sm">
+                <i data-lucide="message-square" class="w-4 h-4"></i>
+                <span>Trò Chuyện AI (Chat)</span>
+            </button>
+            <button onclick="switchTab('canvas')" id="tabBtn-canvas" class="tab-btn flex-1 lg:flex-initial flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-300 text-slate-400 hover:text-indigo-300 hover:bg-slate-900/50 border border-transparent">
+                <i data-lucide="layout-template" class="w-4 h-4"></i>
+                <span>AI Canvas (Biên Tập)</span>
+            </button>
+            <button onclick="switchTab('image')" id="tabBtn-image" class="tab-btn flex-1 lg:flex-initial flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-300 text-slate-400 hover:text-indigo-300 hover:bg-slate-900/50 border border-transparent">
+                <i data-lucide="image" class="w-4 h-4"></i>
+                <span>Tạo Hình Ảnh (Image)</span>
+            </button>
+            <button onclick="switchTab('music')" id="tabBtn-music" class="tab-btn flex-1 lg:flex-initial flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-300 text-slate-400 hover:text-indigo-300 hover:bg-slate-900/50 border border-transparent">
+                <i data-lucide="music-4" class="w-4 h-4"></i>
+                <span>Tạo Âm Thanh (Audio)</span>
+            </button>
+
+            <!-- Khung thông tin hướng dẫn -->
+            <div class="hidden lg:block mt-6 p-4 rounded-xl bg-slate-950/50 border border-slate-900 text-xs text-slate-400 leading-relaxed">
+                <div class="flex items-center gap-2 text-indigo-400 mb-2 font-semibold">
+                    <i data-lucide="info" class="w-3.5 h-3.5"></i>
+                    <span>Hướng Dẫn Sử Dụng</span>
+                </div>
+                Nhập <strong class="text-indigo-400">AI API Key</strong> của bạn ở góc trên bên phải để bắt đầu giao tiếp và sử dụng tất cả tính năng. API Key được lưu an toàn tại bộ nhớ cục bộ của bạn.
+            </div>
+        </div>
+
+        <!-- Màn hình chi tiết của từng Tính Năng -->
+        <div class="lg:col-span-9 bg-slate-950/30 border border-slate-900 rounded-2xl flex flex-col min-h-[620px] shadow-2xl relative overflow-hidden">
+            
+            <!-- TAB 1: AI CHAT (TRÒ CHUYỆN) -->
+            <div id="tab-chat" class="tab-content flex-1 flex flex-col p-4 lg:p-6">
+                <div class="flex justify-between items-center pb-4 border-b border-slate-900">
+                    <div>
+                        <h2 class="text-base font-semibold text-slate-100 flex items-center gap-2">Trò Chuyện Trực Tuyến</h2>
+                        <p class="text-xs text-slate-400">Hỏi đáp đa năng, lập trình, tư duy sáng tạo cùng trợ lý AI.</p>
+                    </div>
+                    <button onclick="clearChat()" class="text-xs text-slate-400 hover:text-red-400 flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-slate-900 transition-all">
+                        <i data-lucide="eraser" class="w-3.5 h-3.5"></i> Xóa hội thoại
+                    </button>
+                </div>
+
+                <!-- Log hội thoại -->
+                <div id="chatMessages" class="flex-1 overflow-y-auto my-4 space-y-4 pr-2 max-h-[440px]">
+                    <div class="flex gap-3 max-w-3xl mr-auto">
+                        <div class="w-8 h-8 rounded-lg bg-indigo-950 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+                            <i data-lucide="bot" class="w-4 h-4"></i>
+                        </div>
+                        <div class="p-3 bg-slate-900/50 border border-slate-800 rounded-2xl rounded-tl-none">
+                            <p class="text-sm leading-relaxed text-slate-300">Xin chào! Tôi đã sẵn sàng đồng hành cùng bạn. Bạn cần hỗ trợ gì hôm nay?</p>
+                            <span class="text-[9px] text-slate-500 block mt-1">Hệ thống trợ lý</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Chat -->
+                <div class="mt-auto border-t border-slate-900 pt-4 flex gap-2">
+                    <textarea id="chatInput" placeholder="Nhập câu hỏi của bạn tại đây... (Nhấn Ctrl + Enter để gửi)" rows="2"
+                        class="flex-1 bg-slate-900 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl p-3 text-sm text-slate-200 outline-none resize-none transition-all"></textarea>
+                    <button onclick="sendChatMessage()" id="chatSendBtn" class="px-5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all flex items-center justify-center">
+                        <i data-lucide="send" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- TAB 2: AI CANVAS (BIÊN TẬP VĂN BẢN & CODE ĐỒNG THỜI - GIỐNG GEMINI CANVAS) -->
+            <div id="tab-canvas" class="tab-content flex-1 hidden flex-col p-4 lg:p-6">
+                <div class="pb-4 border-b border-slate-900 flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                        <h2 class="text-base font-semibold text-slate-100 flex items-center gap-2">
+                            <i data-lucide="layout-template" class="text-indigo-400 w-5 h-5"></i>
+                            AI Canvas Workspace
+                        </h2>
+                        <p class="text-xs text-slate-400">Hợp tác soạn thảo văn bản hoặc code. Chọn các hành động nhanh hoặc tự đưa yêu cầu để AI chỉnh sửa trực tiếp.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="copyCanvasContent()" class="p-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs text-slate-300 flex items-center gap-1.5 transition-all">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i> Sao chép
+                        </button>
+                        <button onclick="clearCanvas()" class="p-1.5 bg-slate-900 hover:bg-red-950/30 border border-slate-800 rounded-lg text-xs text-slate-300 hover:text-red-400 flex items-center gap-1.5 transition-all">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Xóa sạch
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Canvas Side-by-Side Workspace -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 mt-4 flex-1">
+                    
+                    <!-- Khung Soạn Thảo (Trái) -->
+                    <div class="lg:col-span-7 flex flex-col bg-slate-950/60 rounded-xl border border-slate-900 overflow-hidden min-h-[400px]">
+                        <div class="px-3 py-2 bg-slate-900/60 border-b border-slate-900 flex justify-between items-center text-xs text-slate-400">
+                            <span class="flex items-center gap-1"><i data-lucide="file-edit" class="w-3.5 h-3.5 text-indigo-400"></i> Khung Soạn Thảo (Văn bản / Code)</span>
+                            <span id="canvasCharCount" class="font-mono">0 kí tự</span>
+                        </div>
+                        <textarea id="canvasEditor" oninput="updateCanvasMeta()" placeholder="Nhập văn bản, đoạn thơ, bài viết hoặc code của bạn vào đây..." 
+                            class="flex-1 w-full p-4 bg-transparent text-sm text-slate-200 outline-none resize-none font-sans focus:ring-0 leading-relaxed min-h-[350px]"></textarea>
+                    </div>
+
+                    <!-- Khung Trợ Lý Chỉnh Sửa AI (Phải) -->
+                    <div class="lg:col-span-5 flex flex-col gap-4">
+                        
+                        <!-- Nhập yêu cầu trực tiếp -->
+                        <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-4 space-y-3">
+                            <label class="block text-xs font-semibold text-indigo-400 uppercase tracking-wider">Yêu Cầu AI Chỉnh Sửa</label>
+                            <div class="relative">
+                                <textarea id="canvasAICommand" placeholder="Ví dụ: 'Chuyển đoạn văn này sang tiếng Anh trang trọng', 'Viết tiếp đoạn kết luận', 'Tìm lỗi bảo mật trong code này'..." rows="3"
+                                    class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-lg p-2.5 text-xs text-slate-200 outline-none resize-none transition-all"></textarea>
+                            </div>
+                            <button onclick="applyAiCanvasAction('custom')" id="canvasEditBtn" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-lg flex items-center justify-center gap-1.5 transition-all">
+                                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Thực Thi Sửa Đổi
+                            </button>
+                        </div>
+
+                        <!-- Chức năng xử lý nhanh Văn Bản (Quick Text Tools) -->
+                        <div class="bg-slate-900/30 border border-slate-900 rounded-xl p-4">
+                            <span class="block text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2.5">Trợ Lý Viết Lách</span>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="applyAiCanvasAction('continue')" class="px-3 py-2 bg-slate-900 hover:bg-indigo-950/40 hover:text-indigo-400 border border-slate-800 rounded-lg text-xs text-slate-300 flex items-center justify-center gap-1.5 transition-all">
+                                    <i data-lucide="chevron-right-square" class="w-3.5 h-3.5"></i> Viết Tiếp
+                                </button>
+                                <button onclick="applyAiCanvasAction('shorten')" class="px-3 py-2 bg-slate-900 hover:bg-indigo-950/40 hover:text-indigo-400 border border-slate-800 rounded-lg text-xs text-slate-300 flex items-center justify-center gap-1.5 transition-all">
+                                    <i data-lucide="minimize-2" class="w-3.5 h-3.5"></i> Rút Ngắn
+                                </button>
+                                <button onclick="applyAiCanvasAction('grammar')" class="px-3 py-2 bg-slate-900 hover:bg-indigo-950/40 hover:text-indigo-400 border border-slate-800 rounded-lg text-xs text-slate-300 flex items-center justify-center gap-1.5 transition-all">
+                                    <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Sửa Ngữ Pháp
+                                </button>
+                                <button onclick="applyAiCanvasAction('translate')" class="px-3 py-2 bg-slate-900 hover:bg-indigo-950/40 hover:text-indigo-400 border border-slate-800 rounded-lg text-xs text-slate-300 flex items-center justify-center gap-1.5 transition-all">
+                                    <i data-lucide="languages" class="w-3.5 h-3.5"></i> Dịch Sang Anh
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Chức năng xử lý nhanh Lập Trình (Quick Code Tools) -->
+                        <div class="bg-slate-900/30 border border-slate-900 rounded-xl p-4">
+                            <span class="block text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2.5">Trợ Lý Lập Trình (Code)</span>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button onclick="applyAiCanvasAction('explain')" class="px-2 py-2 bg-slate-900 hover:bg-emerald-950/40 hover:text-emerald-400 border border-slate-800 rounded-lg text-[11px] text-slate-300 flex items-center justify-center gap-1 transition-all">
+                                    <i data-lucide="help-circle" class="w-3.5 h-3.5"></i> Giải Thích
+                                </button>
+                                <button onclick="applyAiCanvasAction('optimize')" class="px-2 py-2 bg-slate-900 hover:bg-emerald-950/40 hover:text-emerald-400 border border-slate-800 rounded-lg text-[11px] text-slate-300 flex items-center justify-center gap-1 transition-all">
+                                    <i data-lucide="zap" class="w-3.5 h-3.5"></i> Tối Ưu
+                                </button>
+                                <button onclick="applyAiCanvasAction('debug')" class="px-2 py-2 bg-slate-900 hover:bg-emerald-950/40 hover:text-emerald-400 border border-slate-800 rounded-lg text-[11px] text-slate-300 flex items-center justify-center gap-1 transition-all">
+                                    <i data-lucide="bug" class="w-3.5 h-3.5"></i> Tìm Lỗi
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- TAB 3: TẠO HÌNH ẢNH (IMAGE GENERATOR) -->
+            <div id="tab-image" class="tab-content flex-1 hidden flex-col p-4 lg:p-6">
+                <div class="pb-4 border-b border-slate-900 mb-4">
+                    <h2 class="text-base font-semibold text-slate-100 flex items-center gap-2">Tạo Hình Ảnh Nghệ Thuật</h2>
+                    <p class="text-xs text-slate-400">Kiến tạo hình ảnh sắc nét bằng trí tuệ nhân tạo thông qua mô tả chi tiết.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 flex-1">
+                    <!-- Bảng điều chỉnh thông số -->
+                    <div class="md:col-span-5 space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Đặc tả hình ảnh (Prompt)</label>
+                            <textarea id="imagePrompt" placeholder="Ví dụ: A majestic workspace on top of a mountain, high-tech computer screens, realistic, 4k resolution, cinematic lighting..." rows="4"
+                                class="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl p-3 text-sm text-slate-200 outline-none resize-none transition-all"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Tỷ lệ khung hình</label>
+                            <select id="imageAspectRatio" class="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl p-2.5 text-xs text-slate-300 outline-none">
+                                <option value="1:1">Hình vuông (1:1)</option>
+                                <option value="16:9">Màn ảnh rộng (16:9)</option>
+                                <option value="9:16">Dọc điện thoại (9:16)</option>
+                                <option value="4:3">Tiêu chuẩn (4:3)</option>
+                            </select>
+                        </div>
+
+                        <button onclick="generateImage()" id="genImageBtn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="palette" class="w-4 h-4"></i>
+                            <span>Bắt Đầu Tạo Ảnh (Generate)</span>
+                        </button>
+                    </div>
+
+                    <!-- Khu vực xem ảnh -->
+                    <div class="md:col-span-7 flex flex-col justify-center items-center border border-slate-900 bg-slate-950/60 rounded-xl p-4 min-h-[300px] relative">
+                        <div id="imagePlaceholder" class="text-center p-6 space-y-3">
+                            <div class="w-16 h-16 mx-auto rounded-full bg-slate-900/80 border border-slate-800 flex items-center justify-center text-slate-600">
+                                <i data-lucide="image" class="w-8 h-8"></i>
+                            </div>
+                            <p class="text-xs text-slate-400">Chưa có ảnh nào được tạo ra. Hãy nhập mô tả để tạo ngay.</p>
+                        </div>
+
+                        <div id="imageLoading" class="hidden text-center space-y-3">
+                            <div class="w-12 h-12 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin mx-auto"></div>
+                            <p class="text-xs text-indigo-400 tracking-wider">Đang khởi tạo hình ảnh...</p>
+                        </div>
+
+                        <div id="imageResultContainer" class="hidden w-full h-full flex flex-col items-center">
+                            <img id="generatedImage" src="" alt="Hình ảnh được tạo bởi AI" class="max-h-[380px] rounded-lg shadow-xl object-contain border border-slate-800">
+                            <div class="mt-4 flex gap-2">
+                                <button onclick="downloadImage()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs text-slate-300 flex items-center gap-1.5 transition-all">
+                                    <i data-lucide="download" class="w-3.5 h-3.5"></i> Tải ảnh xuống
+                                </button>
+                                <button onclick="sendImageToCanvas()" class="px-4 py-2 bg-indigo-950/50 hover:bg-indigo-950 text-indigo-400 border border-indigo-800/40 rounded-lg text-xs flex items-center gap-1.5 transition-all">
+                                    <i data-lucide="layout-template" class="w-3.5 h-3.5"></i> Chèn vào Canvas
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: TẠO ÂM THANH / NHẠC (MUSIC/AUDIO GENERATOR) -->
+            <div id="tab-music" class="tab-content flex-1 hidden flex-col p-4 lg:p-6">
+                <div class="pb-4 border-b border-slate-900 mb-4">
+                    <h2 class="text-base font-semibold text-slate-100 flex items-center gap-2">Kiến Tạo Âm Thanh & Giọng Nói</h2>
+                    <p class="text-xs text-slate-400">Kiến tạo âm thanh thiền, thư giãn bằng thuật toán hoặc tạo giọng nói AI đọc văn bản cao cấp.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 flex-1">
+                    <!-- Bảng cài đặt âm thanh -->
+                    <div class="md:col-span-5 space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Ý tưởng âm thanh hoặc văn bản đọc (Prompt/Text)</label>
+                            <textarea id="musicPrompt" placeholder="Nhập văn bản cần AI đọc thành giọng nói, hoặc chủ đề nhạc thiền như 'Tiếng sóng vỗ nhẹ nhàng trên bãi cát mịn ban đêm'..." rows="4"
+                                class="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl p-3 text-sm text-slate-200 outline-none resize-none transition-all"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Loại Hình Âm Thanh</label>
+                            <select id="musicInstrument" class="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl p-2.5 text-xs text-slate-300 outline-none font-medium">
+                                <option value="voice_kore">Giọng Đọc AI Cao Cấp (Kore - Ấm áp)</option>
+                                <option value="voice_zephyr">Giọng Đọc AI Cao Cấp (Zephyr - Sống động)</option>
+                                <option value="meditation">Nhạc Thiền Tịnh Tâm (Ambient Zen Synth)</option>
+                                <option value="wind">Không Gian Gió Thạch Động (Mystic Space Wind)</option>
+                            </select>
+                        </div>
+
+                        <button onclick="generateMusicTrack()" id="genMusicBtn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="music" class="w-4 h-4"></i>
+                            <span>Bắt Đầu Khởi Tạo Âm Âm (Generate)</span>
+                        </button>
+                    </div>
+
+                    <!-- Giao diện chơi nhạc -->
+                    <div class="md:col-span-7 flex flex-col justify-center items-center border border-slate-900 bg-slate-950/60 rounded-xl p-6 min-h-[300px] text-center">
+                        
+                        <!-- Bộ giả lập sóng âm mượt mà -->
+                        <div class="w-full max-w-sm h-32 flex items-end justify-center gap-1.5 mb-6 px-4">
+                            <div class="wave-bar w-2 bg-indigo-500/20 rounded-full h-8 transition-all duration-300"></div>
+                            <div class="wave-bar w-2 bg-indigo-500/30 rounded-full h-12 transition-all duration-300"></div>
+                            <div class="wave-bar w-2 bg-indigo-500/40 rounded-full h-20 transition-all duration-300"></div>
+                            <div class="wave-bar w-2 bg-indigo-400 rounded-full h-28 transition-all duration-300"></div>
+                            <div class="wave-bar w-2 bg-indigo-300 rounded-full h-16 transition-all duration-300"></div>
+                            <div class="wave-bar w-2 bg-emerald-400 rounded-full h-24 transition-all duration-300"></div>
+                            <div class="wave-bar w-2 bg-indigo-500/40 rounded-full h-10 transition-all duration-300"></div>
+                            <div class="wave-bar w-2 bg-indigo-500/20 rounded-full h-6 transition-all duration-300"></div>
+                        </div>
+
+                        <div id="musicStatus" class="space-y-2">
+                            <h3 id="currentTrackTitle" class="text-sm font-semibold text-slate-200">Trình phát nhạc chưa khởi chạy</h3>
+                            <p id="currentTrackDesc" class="text-xs text-slate-400 max-w-xs mx-auto">Vui lòng nhập văn bản hoặc thiết lập âm thanh để bắt đầu nghe.</p>
+                        </div>
+
+                        <!-- Các phím điều khiển Audio -->
+                        <div class="mt-6 flex items-center justify-center gap-4">
+                            <button onclick="toggleAudio()" id="audioPlayBtn" disabled class="w-12 h-12 rounded-full bg-slate-900 text-indigo-400 border border-indigo-500/20 hover:bg-slate-800 flex items-center justify-center disabled:opacity-50 transition-all">
+                                <i id="playIcon" data-lucide="play" class="w-6 h-6"></i>
+                            </button>
+                            <span id="audioTime" class="text-xs text-slate-500 font-mono">00:00 / 00:30</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Hệ thống thông báo góc màn hình (Toast Notifications) -->
+    <div id="toastMessage" class="fixed bottom-4 right-4 bg-slate-900 border border-slate-800 text-slate-200 text-xs px-4 py-3 rounded-xl shadow-xl translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2">
+        <i data-lucide="info" class="w-4 h-4 text-indigo-400 shrink-0"></i>
+        <span id="toastText">Thao tác hoàn tất.</span>
+    </div>
+
+    <!-- Script vận hành hệ thống -->
+    <script>
+        let currentTab = 'chat';
+        let apiKey = '';
+        
+        // Cấu hình âm thanh
+        let audioCtx = null;
+        let synthInterval = null;
+        let isMusicPlaying = false;
+        let audioStartTime = 0;
+        let audioPlaybackInterval = null;
+        let generatedTtsAudio = null;
+
+        // Khởi chạy hệ thống ban đầu
+        window.onload = function() {
+            lucide.createIcons();
+            
+            // Lấy khóa API đã lưu từ trước nếu có
+            const savedKey = localStorage.getItem('ai_api_key');
+            if (savedKey) {
+                document.getElementById('apiKeyInput').value = savedKey;
+                apiKey = savedKey;
+                updateApiBadge(true);
+            }
+        };
+
+        // --- CÁC HÀM TIỆN ÍCH HỆ THỐNG ---
+        function showToast(msg) {
+            const toast = document.getElementById('toastMessage');
+            document.getElementById('toastText').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 4000);
+        }
+
+        function saveApiKey() {
+            const key = document.getElementById('apiKeyInput').value.trim();
+            if (!key) {
+                showToast("Vui lòng nhập API Key hợp lệ.");
+                return;
+            }
+            apiKey = key;
+            localStorage.setItem('ai_api_key', key);
+            updateApiBadge(true);
+            showToast("Đã lưu trữ và kích hoạt AI API Key!");
+        }
+
+        function updateApiBadge(active) {
+            const badge = document.getElementById('apiStatusBadge');
+            if (active) {
+                badge.className = "h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-md shadow-emerald-400/50 transition-all duration-500";
+                badge.title = "Đã cấu hình API Key";
+            } else {
+                badge.className = "h-2.5 w-2.5 rounded-full bg-red-500 shadow-md shadow-red-500/50 transition-all duration-500";
+                badge.title = "Chưa kết nối API Key";
+            }
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = "tab-btn flex-1 lg:flex-initial flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-300 text-slate-400 hover:text-indigo-300 hover:bg-slate-900/50 border border-transparent";
+            });
+
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tabBtn-${tabId}`);
+            activeBtn.className = "tab-btn flex-1 lg:flex-initial flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-300 bg-indigo-950/40 text-indigo-400 border border-indigo-800/40 shadow-sm";
+
+            currentTab = tabId;
+        }
+
+        // --- TAB 1: AI CHAT LOGIC ---
+        let chatHistory = [];
+
+        async function sendChatMessage() {
+            const inputEl = document.getElementById('chatInput');
+            const userMsg = inputEl.value.trim();
+            if (!userMsg) return;
+
+            if (!apiKey) {
+                showToast("Vui lòng điền và lưu AI API Key ở góc trên để trò chuyện!");
+                return;
+            }
+
+            appendMessage(userMsg, 'user');
+            inputEl.value = '';
+
+            const loadingId = appendMessage("AI đang suy nghĩ...", 'system-loading');
+            chatHistory.push({ role: 'user', parts: [{ text: userMsg }] });
+
+            try {
+                const responseText = await callGeminiAPIWithBackoff(chatHistory);
+                removeMessage(loadingId);
+                appendMessage(responseText, 'assistant');
+                chatHistory.push({ role: 'model', parts: [{ text: responseText }] });
+            } catch (error) {
+                removeMessage(loadingId);
+                appendMessage(`Lỗi hệ thống: ${error.message}. Hãy thử lại sau.`, 'assistant');
+            }
+        }
+
+        function appendMessage(text, sender) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const msgId = 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4);
+
+            let messageHtml = '';
+            if (sender === 'user') {
+                messageHtml = `
+                    <div class="flex gap-3 max-w-3xl ml-auto justify-end" id="${msgId}">
+                        <div class="p-3 bg-indigo-950/30 border border-indigo-900/20 rounded-2xl rounded-tr-none text-slate-200">
+                            <p class="text-sm leading-relaxed">${escapeHtml(text)}</p>
+                        </div>
+                        <div class="w-8 h-8 rounded-lg bg-indigo-900 flex items-center justify-center text-white font-bold text-xs shrink-0">
+                            Tôi
+                        </div>
+                    </div>
+                `;
+            } else if (sender === 'system-loading') {
+                messageHtml = `
+                    <div class="flex gap-3 max-w-3xl mr-auto items-center" id="${msgId}">
+                        <div class="w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 shrink-0">
+                            <i data-lucide="loader" class="w-4 h-4 animate-spin"></i>
+                        </div>
+                        <div class="p-3 bg-slate-900/40 rounded-2xl rounded-tl-none text-slate-400 italic text-sm animate-pulse">
+                            ${text}
+                        </div>
+                    </div>
+                `;
+            } else {
+                messageHtml = `
+                    <div class="flex gap-3 max-w-3xl mr-auto" id="${msgId}">
+                        <div class="w-8 h-8 rounded-lg bg-indigo-950 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+                            <i data-lucide="bot" class="w-4 h-4"></i>
+                        </div>
+                        <div class="p-3 bg-slate-900/50 border border-slate-800 rounded-2xl rounded-tl-none">
+                            <p class="text-sm leading-relaxed">${formatMarkdown(text)}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            messagesContainer.insertAdjacentHTML('beforeend', messageHtml);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            lucide.createIcons();
+            return msgId;
+        }
+
+        function removeMessage(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        }
+
+        function clearChat() {
+            document.getElementById('chatMessages').innerHTML = `
+                <div class="flex gap-3 max-w-3xl mr-auto">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-950 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+                        <i data-lucide="bot" class="w-4 h-4"></i>
+                    </div>
+                    <div class="p-3 bg-slate-900/50 border border-slate-800 rounded-2xl rounded-tl-none">
+                        <p class="text-sm leading-relaxed text-slate-300">Đã làm sạch lịch sử trò chuyện. Bắt đầu phiên hội thoại mới.</p>
+                        <span class="text-[9px] text-slate-500 block mt-1">Hệ thống trợ lý</span>
+                    </div>
+                </div>
+            `;
+            chatHistory = [];
+            lucide.createIcons();
+            showToast("Đã xóa lịch sử trò chuyện.");
+        }
+
+        document.getElementById('chatInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                e.preventDefault();
+                sendChatMessage();
+            }
+        });
+
+        // --- CÁC HÀM GỌI API GEMINI (Dự Phòng Exponential Backoff) ---
+        async function callGeminiAPIWithBackoff(contents, sysInstruction = "Hãy đóng vai một trợ lý trí tuệ nhân tạo chuyên nghiệp, giải quyết câu hỏi của người dùng một cách chính xác, tự nhiên, ngắn gọn và mạch lạc bằng tiếng Việt.") {
+            const maxRetries = 5;
+            let delay = 1000;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+            for (let attempt = 0; attempt < maxRetries; attempt++) {
+                try {
+                    const payload = {
+                        contents: contents,
+                        systemInstruction: {
+                            parts: [{ text: sysInstruction }]
+                        }
+                    };
+
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errData = await response.json();
+                        throw new Error(errData.error?.message || `Lỗi API: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    const aiText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (!aiText) throw new Error("Phản hồi rỗng.");
+                    return aiText;
+                } catch (err) {
+                    if (attempt === maxRetries - 1) {
+                        throw err;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2;
+                }
+            }
+        }
+
+        // --- TAB 2: AI CANVAS WORKSPACE LOGIC (GIỐNG GEMINI CANVAS) ---
+        function updateCanvasMeta() {
+            const editor = document.getElementById('canvasEditor');
+            const charCount = editor.value.length;
+            document.getElementById('canvasCharCount').innerText = `${charCount.toLocaleString()} kí tự`;
+        }
+
+        function clearCanvas() {
+            document.getElementById('canvasEditor').value = '';
+            document.getElementById('canvasAICommand').value = '';
+            updateCanvasMeta();
+            showToast("Đã dọn dẹp không gian biên tập Canvas.");
+        }
+
+        function copyCanvasContent() {
+            const content = document.getElementById('canvasEditor').value;
+            if (!content) {
+                showToast("Khung soạn thảo đang rỗng.");
+                return;
+            }
+            const textarea = document.createElement('textarea');
+            textarea.value = content;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            showToast("Đã sao chép nội dung vào Clipboard!");
+        }
+
+        async function applyAiCanvasAction(actionType, customInstruction = '') {
+            const editor = document.getElementById('canvasEditor');
+            const currentText = editor.value.trim();
+
+            if (!apiKey) {
+                showToast("Vui lòng gắn AI API Key ở góc trên để sử dụng tính năng Canvas!");
+                return;
+            }
+
+            if (!currentText && actionType !== 'continue') {
+                showToast("Khung soạn thảo rỗng. Vui lòng nhập dữ liệu trước khi xử lý.");
+                return;
+            }
+
+            let systemInstruction = "Bạn là trợ lý AI chuyên nghiệp trực tiếp biên tập nội dung trên canvas của người dùng.";
+            let promptText = "";
+
+            switch (actionType) {
+                case 'continue':
+                    promptText = `Hãy viết tiếp một cách tự nhiên, mạch lạc và sáng tạo phần nội dung dưới đây: "${currentText}". CHỈ TRẢ VỀ toàn bộ văn bản sau khi đã viết tiếp, không thêm lời chào, không mô tả hay giải thích nào khác ngoài văn bản hoàn chỉnh.`;
+                    break;
+                case 'shorten':
+                    promptText = `Hãy rút gọn súc tích đoạn văn bản sau đây nhưng vẫn giữ đầy đủ ý nghĩa chính: "${currentText}". CHỈ TRẢ VỀ văn bản đã được rút gọn hoàn chỉnh, không thêm bất kỳ nhận xét nào ngoài lề.`;
+                    break;
+                case 'grammar':
+                    promptText = `Hãy sửa toàn bộ lỗi chính tả, lỗi lặp từ, sửa câu từ cho mạch lạc và đúng ngữ pháp tiếng Việt từ đoạn văn này: "${currentText}". CHỈ TRẢ VỀ văn bản sạch đã sửa hoàn chỉnh, không mô tả phân tích.`;
+                    break;
+                case 'translate':
+                    promptText = `Hãy dịch đoạn văn bản sau sang tiếng Anh chuyên nghiệp và tự nhiên nhất: "${currentText}". CHỈ TRẢ VỀ bản dịch hoàn chỉnh, không kèm chú thích.`;
+                    break;
+                case 'explain':
+                    promptText = `Hãy giải thích chi tiết, dễ hiểu tác dụng và thuật toán của đoạn code dưới đây: \n\`\`\`\n${currentText}\n\`\`\`. Viết câu trả lời mạch lạc, chuyên sâu, chỉ rõ cấu trúc chính.`;
+                    break;
+                case 'optimize':
+                    promptText = `Hãy tối ưu hiệu năng và định dạng lại đoạn code sau để tăng tốc độ chạy và bảo mật cao hơn: \n\`\`\`\n${currentText}\n\`\`\`. CHỈ TRẢ VỀ duy nhất phần code sạch đã được tối ưu hoàn chỉnh, không kèm lời giải thích rườm rà.`;
+                    break;
+                case 'debug':
+                    promptText = `Hãy kiểm tra lỗi, sửa các lỗi cú pháp hoặc logic có sẵn trong đoạn code sau: \n\`\`\`\n${currentText}\n\`\`\`. Trả về phần code đã sửa lỗi kèm 1-2 câu giải thích ngắn về nguyên nhân lỗi ban đầu.`;
+                    break;
+                case 'custom':
+                    const commandText = document.getElementById('canvasAICommand').value.trim();
+                    if (!commandText) {
+                        showToast("Vui lòng nhập yêu cầu chỉnh sửa tùy chỉnh!");
+                        return;
+                    }
+                    promptText = `Văn bản/Code hiện tại trên Canvas là:\n"${currentText}"\n\nYêu cầu chỉnh sửa cụ thể: "${commandText}". Hãy thực thi yêu cầu một cách hoàn hảo và chuyên nghiệp nhất. CHỈ TRẢ VỀ kết quả cuối cùng sau khi sửa đổi, tuyệt đối không thêm lời giải thích hay lời mở đầu trừ phi yêu cầu đó bắt buộc hỏi đáp.`;
+                    break;
+            }
+
+            const editBtn = document.getElementById('canvasEditBtn');
+            const originalBtnHtml = editBtn.innerHTML;
+            editBtn.disabled = true;
+            editBtn.innerHTML = `<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i> Đang chỉnh sửa...`;
+            lucide.createIcons();
+
+            try {
+                const updatedContent = await callGeminiAPIWithBackoff([{ role: 'user', parts: [{ text: promptText }] }], systemInstruction);
+                
+                // Cập nhật kết quả vào khung soạn thảo chính
+                if (actionType === 'explain' || actionType === 'debug') {
+                    // Đối với phân tích/giải thích, chúng ta không đè đứt đoạn code mà chuyển kết quả sang chat, 
+                    // hoặc thông báo đẹp mắt. Nhưng để thuận tiện, chúng ta sẽ ghi tiếp vào Canvas dưới dạng bình luận hoặc thay thế.
+                    editor.value = updatedContent;
+                } else {
+                    editor.value = updatedContent;
+                }
+                
+                updateCanvasMeta();
+                showToast("AI đã cập nhật trực tiếp lên Canvas thành công!");
+                if (actionType === 'custom') {
+                    document.getElementById('canvasAICommand').value = '';
+                }
+            } catch (err) {
+                showToast(`Chỉnh sửa Canvas thất bại: ${err.message}`);
+            } finally {
+                editBtn.disabled = false;
+                editBtn.innerHTML = originalBtnHtml;
+                lucide.createIcons();
+            }
+        }
+
+
+        // --- TAB 3: TẠO HÌNH ẢNH LOGIC (IMAGEN 4.0) ---
+        async function generateImage() {
+            const prompt = document.getElementById('imagePrompt').value.trim();
+            if (!prompt) {
+                showToast("Vui lòng nhập từ khóa mô tả hình ảnh cần tạo.");
+                return;
+            }
+
+            if (!apiKey) {
+                showToast("Vui lòng gắn AI API Key để thực thi tạo ảnh!");
+                return;
+            }
+
+            document.getElementById('imagePlaceholder').classList.add('hidden');
+            document.getElementById('imageResultContainer').classList.add('hidden');
+            document.getElementById('imageLoading').classList.remove('hidden');
+            const genBtn = document.getElementById('genImageBtn');
+            genBtn.disabled = true;
+            genBtn.classList.add('opacity-50');
+
+            const aspect = document.getElementById('imageAspectRatio').value;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`;
+
+            let delay = 1000;
+            const maxRetries = 5;
+            let success = false;
+            let resultData = null;
+
+            for (let attempt = 0; attempt < maxRetries; attempt++) {
+                try {
+                    const payload = {
+                        instances: [{ prompt: prompt }],
+                        parameters: {
+                            sampleCount: 1,
+                            aspectRatio: aspect
+                        }
+                    };
+
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errData = await response.json();
+                        throw new Error(errData.error?.message || `Lỗi: ${response.status}`);
+                    }
+
+                    resultData = await response.json();
+                    success = true;
+                    break;
+                } catch (err) {
+                    if (attempt === maxRetries - 1) {
+                        document.getElementById('imageLoading').classList.add('hidden');
+                        document.getElementById('imagePlaceholder').classList.remove('hidden');
+                        genBtn.disabled = false;
+                        genBtn.classList.remove('opacity-50');
+                        showToast(`Không thể tạo ảnh: ${err.message}`);
+                        return;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2;
+                }
+            }
+
+            if (success && resultData) {
+                try {
+                    const base64Data = resultData.predictions?.[0]?.bytesBase64Encoded;
+                    if (!base64Data) throw new Error("Mẫu dữ liệu rỗng.");
+                    
+                    const generatedImgUrl = `data:image/png;base64,${base64Data}`;
+                    const imgEl = document.getElementById('generatedImage');
+                    imgEl.src = generatedImgUrl;
+
+                    document.getElementById('imageLoading').classList.add('hidden');
+                    document.getElementById('imageResultContainer').classList.remove('hidden');
+                    showToast("Đã khởi tạo bức ảnh thành công!");
+                } catch (err) {
+                    showToast(`Xử lý file ảnh thất bại: ${err.message}`);
+                    document.getElementById('imageLoading').classList.add('hidden');
+                    document.getElementById('imagePlaceholder').classList.remove('hidden');
+                }
+            }
+
+            genBtn.disabled = false;
+            genBtn.classList.remove('opacity-50');
+        }
+
+        function downloadImage() {
+            const imgUrl = document.getElementById('generatedImage').src;
+            if (!imgUrl) return;
+            const link = document.createElement('a');
+            link.href = imgUrl;
+            link.download = `AI_Workspace_Image_${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function sendImageToCanvas() {
+            const imgUrl = document.getElementById('generatedImage').src;
+            if (!imgUrl) return;
+            // Chuyển hình ảnh dạng Base64 trực tiếp vào Canvas Editor dưới dạng markdown ảnh
+            const editor = document.getElementById('canvasEditor');
+            const markdownImg = `\n![Hình ảnh gốc](${imgUrl})\n`;
+            editor.value += markdownImg;
+            updateCanvasMeta();
+            showToast("Đã chèn liên kết hình ảnh vào cuối trang Canvas!");
+            switchTab('canvas');
+        }
+
+        // --- TAB 4: TẠO ÂM THANH / GIỌNG NÓI LOGIC ---
+        async function generateMusicTrack() {
+            const prompt = document.getElementById('musicPrompt').value.trim();
+            const type = document.getElementById('musicInstrument').value;
+
+            if (!prompt) {
+                showToast("Vui lòng điền mô tả âm nhạc hoặc đoạn văn cần phát âm.");
+                return;
+            }
+
+            const genBtn = document.getElementById('genMusicBtn');
+            genBtn.disabled = true;
+            genBtn.classList.add('opacity-50');
+            document.getElementById('currentTrackTitle').innerText = "Đang xử lý luồng dữ liệu...";
+            document.getElementById('currentTrackDesc').innerText = "Vui lòng đợi giây lát, hệ thống đang tính toán âm tầng...";
+
+            if (type.startsWith('voice_')) {
+                if (!apiKey) {
+                    showToast("Vui lòng thiết lập AI API Key để dùng giọng đọc AI.");
+                    genBtn.disabled = false;
+                    genBtn.classList.remove('opacity-50');
+                    return;
+                }
+
+                try {
+                    const voiceName = type === 'voice_zephyr' ? 'Zephyr' : 'Kore';
+                    const ttsResult = await callGeminiTtsAPI(prompt, voiceName);
+                    
+                    const wavBlob = pcmToWav(ttsResult, 24000);
+                    const audioUrl = URL.createObjectURL(wavBlob);
+                    
+                    generatedTtsAudio = new Audio(audioUrl);
+                    setupAudioEventListeners(generatedTtsAudio);
+
+                    document.getElementById('currentTrackTitle').innerText = `Giọng nói AI (${voiceName})`;
+                    document.getElementById('currentTrackDesc').innerText = `Đọc văn bản: "${prompt.substring(0, 40)}..."`;
+                    document.getElementById('audioPlayBtn').disabled = false;
+                    showToast("Đã tạo tệp giọng đọc AI hoàn tất!");
+                } catch (err) {
+                    showToast(`Lỗi tạo giọng đọc: ${err.message}`);
+                    document.getElementById('currentTrackTitle').innerText = "Lỗi liên thông âm thanh";
+                }
+            } else {
+                stopMusic();
+                let chordProgression = [110, 147, 165, 196]; // A minor
+                
+                if (apiKey) {
+                    try {
+                        const promptDeft = `Người dùng muốn một giai điệu: "${prompt}". Hãy gợi ý danh sách 4 tần số Hz (ví dụ: [110, 146, 164, 220]) phù hợp định dạng JSON: {"frequencies": [val1, val2, val3, val4]}. Không ghi chữ gì ngoài JSON.`;
+                        const res = await callGeminiAPIWithBackoff([{role: 'user', parts: [{text: promptDeft}]}], "Chỉ trả về JSON tinh khiết.");
+                        const cleaned = res.replace(/```json/g, '').replace(/```/g, '').trim();
+                        const parsed = JSON.parse(cleaned);
+                        if (parsed.frequencies && parsed.frequencies.length >= 4) {
+                            chordProgression = parsed.frequencies;
+                        }
+                    } catch (e) {}
+                }
+
+                setupProceduralMusic(chordProgression, type);
+                document.getElementById('currentTrackTitle').innerText = `Nhạc nền sinh học (${type === 'meditation' ? 'Zen Space' : 'Caves Acoustic'})`;
+                document.getElementById('currentTrackDesc').innerText = `Đang hòa âm cho ý tưởng: "${prompt.substring(0, 45)}..."`;
+                document.getElementById('audioPlayBtn').disabled = false;
+                showToast("Nhạc nền Ambient đã bắt đầu phát!");
+            }
+
+            genBtn.disabled = false;
+            genBtn.classList.remove('opacity-50');
+        }
+
+        async function callGeminiTtsAPI(text, voiceName) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: text }] }],
+                generationConfig: {
+                    responseModalities: ["AUDIO"],
+                    speechConfig: {
+                        voiceConfig: {
+                            prebuiltVoiceConfig: {
+                                voiceName: voiceName
+                            }
+                        }
+                    }
+                }
+            };
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error?.message || "Lỗi cuộc gọi TTS");
+            }
+
+            const data = await response.json();
+            const base64Audio = data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+            if (!base64Audio) throw new Error("Không có phản hồi âm thanh.");
+            
+            const binaryString = window.atob(base64Audio);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        function pcmToWav(pcmBuffer, sampleRate) {
+            const pcmData = new Int16Array(pcmBuffer);
+            const buffer = new ArrayBuffer(44 + pcmData.length * 2);
+            const view = new DataView(buffer);
+
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + pcmData.length * 2, true);
+            writeString(view, 8, 'WAVE');
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, 1, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * 2, true);
+            view.setUint16(32, 2, true);
+            view.setUint16(34, 16, true);
+            writeString(view, 36, 'data');
+            view.setUint32(40, pcmData.length * 2, true);
+
+            let offset = 44;
+            for (let i = 0; i < pcmData.length; i++, offset += 2) {
+                view.setInt16(offset, pcmData[i], true);
+            }
+
+            return new Blob([view], { type: 'audio/wav' });
+        }
+
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+
+        function setupAudioEventListeners(audioObj) {
+            audioObj.onplay = () => {
+                isMusicPlaying = true;
+                document.getElementById('playIcon').setAttribute('data-lucide', 'pause');
+                lucide.createIcons();
+                startVisualizerEffect(true);
+            };
+            audioObj.onpause = () => {
+                isMusicPlaying = false;
+                document.getElementById('playIcon').setAttribute('data-lucide', 'play');
+                lucide.createIcons();
+                startVisualizerEffect(false);
+            };
+            audioObj.onended = () => {
+                isMusicPlaying = false;
+                document.getElementById('playIcon').setAttribute('data-lucide', 'play');
+                lucide.createIcons();
+                startVisualizerEffect(false);
+            };
+            audioObj.ontimeupdate = () => {
+                const cur = formatTime(audioObj.currentTime);
+                const dur = formatTime(audioObj.duration || 30);
+                document.getElementById('audioTime').innerText = `${cur} / ${dur}`;
+            };
+        }
+
+        function formatTime(secs) {
+            if (isNaN(secs)) return "00:00";
+            const m = Math.floor(secs / 60).toString().padStart(2, '0');
+            const s = Math.floor(secs % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        function setupProceduralMusic(chord, type) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            let step = 0;
+            
+            const playNote = (freq, duration, typeOsc) => {
+                if (!audioCtx) return;
+                
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                osc.type = typeOsc; 
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(700, audioCtx.currentTime);
+
+                gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(type === 'meditation' ? 0.25 : 0.15, audioCtx.currentTime + 0.6);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+
+                osc.connect(filter);
+                filter.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            };
+
+            isMusicPlaying = true;
+            audioStartTime = Date.now();
+            
+            synthInterval = setInterval(() => {
+                const freq = chord[step % chord.length];
+                const octaveMultiplier = Math.random() > 0.8 ? 2 : 1;
+                
+                playNote(freq * octaveMultiplier, 4.5, type === 'meditation' ? 'triangle' : 'sine');
+                
+                if (Math.random() > 0.6) {
+                    setTimeout(() => {
+                        playNote(freq * 1.5, 2.5, 'sine');
+                    }, 600);
+                }
+                step++;
+            }, 2200);
+
+            audioPlaybackInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - audioStartTime) / 1000);
+                if (elapsed >= 30) {
+                    stopMusic();
+                } else {
+                    document.getElementById('audioTime').innerText = `00:${elapsed.toString().padStart(2, '0')} / 00:30`;
+                }
+            }, 1000);
+
+            document.getElementById('playIcon').setAttribute('data-lucide', 'pause');
+            lucide.createIcons();
+            startVisualizerEffect(true);
+        }
+
+        function toggleAudio() {
+            if (generatedTtsAudio) {
+                if (isMusicPlaying) {
+                    generatedTtsAudio.pause();
+                } else {
+                    generatedTtsAudio.play();
+                }
+            } else {
+                if (isMusicPlaying) {
+                    stopMusic();
+                } else {
+                    generateMusicTrack();
+                }
+            }
+        }
+
+        function stopMusic() {
+            isMusicPlaying = false;
+            if (synthInterval) clearInterval(synthInterval);
+            if (audioPlaybackInterval) clearInterval(audioPlaybackInterval);
+            if (audioCtx) {
+                audioCtx.close();
+                audioCtx = null;
+            }
+            document.getElementById('playIcon').setAttribute('data-lucide', 'play');
+            document.getElementById('audioTime').innerText = "00:00 / 00:30";
+            lucide.createIcons();
+            startVisualizerEffect(false);
+        }
+
+        let waveInterval = null;
+        function startVisualizerEffect(active) {
+            const bars = document.querySelectorAll('.wave-bar');
+            if (active) {
+                waveInterval = setInterval(() => {
+                    bars.forEach((bar, idx) => {
+                        const randomHeight = Math.floor(Math.random() * 80) + 10;
+                        bar.style.height = `${randomHeight}px`;
+                        bar.style.opacity = (randomHeight / 100) + 0.2;
+                    });
+                }, 150);
+            } else {
+                if (waveInterval) clearInterval(waveInterval);
+                bars.forEach((bar, idx) => {
+                    bar.style.height = `${[8, 12, 20, 28, 16, 24, 10, 6][idx]}px`;
+                    bar.style.opacity = '1';
+                });
+            }
+        }
+
+        // --- BỘ ĐỊNH DẠNG TEXT (FORMATTER) ---
+        function escapeHtml(string) {
+            return String(string).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function formatMarkdown(text) {
+            let html = escapeHtml(text);
+            html = html.replace(/\n/g, '<br>');
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="text-indigo-400 font-semibold">$1</strong>');
+            html = html.replace(/`(.*?)`/g, '<code class="bg-slate-900 text-amber-300 px-1 py-0.5 rounded font-mono text-xs">$1</code>');
+            return html;
+        }
+    </script>
+</body>
+</html>
